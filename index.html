@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grabador de Cámara Web</title>
+    <script defer>
+        let mediaRecorder; // Controlador de la grabación
+        let recordedChunks = []; // Almacenará las partes del video grabado
+        let stream; // Flujo de video y audio
+        let videoURL; // URL del video grabado
+        
+        // Solicita permisos y obtiene el flujo de la cámara y el micrófono
+        async function getMedia() {
+            if (!stream) {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            }
+            return stream;
+        }
+
+        // Inicia la grabación de video
+        async function startRecording() {
+            recordedChunks = []; // Reinicia el almacenamiento del video
+            const stream = await getMedia();
+            document.getElementById('video').srcObject = stream; // Muestra la vista previa en el video principal
+            
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = event => recordedChunks.push(event.data); // Guarda los fragmentos de video
+            mediaRecorder.start();
+        }
+        
+        // Detiene la grabación y libera el stream de la cámara
+        function stopRecording() {
+            return new Promise(resolve => {
+                if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                    mediaRecorder.onstop = () => {
+                        document.getElementById('video').srcObject = null; // Limpia la vista previa
+                        resolve();
+                    };
+                    mediaRecorder.stop();
+                } else {
+                    resolve();
+                }
+            });
+        }
+        
+        // Abre el modal y muestra la grabación
+        async function openModal() {
+            await stopRecording(); // Asegura que la grabación se detenga antes de mostrarla
+            
+            if (recordedChunks.length === 0) return;
+            
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            videoURL = URL.createObjectURL(blob);
+            document.getElementById('modal-video').src = videoURL;
+            document.getElementById('download-button').href = videoURL;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        // Cierra el modal y reanuda la grabación automáticamente
+        async function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal-video').src = "";
+            await startRecording(); // Reinicia la grabación al cerrar el modal
+        }
+        
+        // Rebobina 5 segundos en el video dentro del modal
+        function rewindModalVideo() {
+            const videoElement = document.getElementById('modal-video');
+            videoElement.currentTime = Math.max(0, videoElement.currentTime - 5);
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6 bg-gray-100">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
+        <h1 class="text-2xl font-bold mb-4">Grabador de Cámara Web</h1>
+        <video id="video" autoplay class="w-full mb-4"></video>
+        <div class="flex space-x-4 mb-4">
+            <button onclick="startRecording()" class="bg-blue-500 text-white px-4 py-2 rounded">Iniciar Grabación</button>
+            <button onclick="openModal()" class="bg-gray-500 text-white px-4 py-2 rounded">📂 Ver Grabación</button>
+            <button onclick="stopRecording()" class="bg-red-500 text-white px-4 py-2 rounded">Detener Grabación</button>
+        </div>
+    </div>
+    
+    <div id="modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg">
+            <video id="modal-video" controls class="w-full mb-4"></video>
+            <div class="flex justify-between">
+                <button onclick="rewindModalVideo()" class="bg-gray-500 text-white px-4 py-2 rounded">⏪ Retroceder 5s</button>
+                <a id="download-button" download="grabacion.webm" class="bg-green-500 text-white px-4 py-2 rounded">⬇ Descargar</a>
+                <button onclick="closeModal()" class="bg-red-500 text-white px-4 py-2 rounded">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
