@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grabador de Cámara Web</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
     <style>
         .custom-bg {
             background-color: #f8f9fa !important; /* Fondo gris claro */
@@ -81,14 +82,17 @@
         body, html {
             height: 100%;
             margin: 0;
+            padding: 0;
             background-color: #f8f9fa; /* Fondo gris claro */
         }
 
-        .container {
+        .container-fluid {
             height: 100%;
+            width: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            padding: 0;
         }
 
         .table {
@@ -225,6 +229,19 @@
                 scoreElement.textContent = --score;
             }
         }
+
+        // Solicitar pantalla completa al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            } else if (document.documentElement.mozRequestFullScreen) { /* Firefox */
+                document.documentElement.mozRequestFullScreen();
+            } else if (document.documentElement.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+                document.documentElement.msRequestFullscreen();
+            }
+        });
     </script>
 </head>
 
