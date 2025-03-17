@@ -81,8 +81,8 @@
 
         body, html {
             height: 100%;
-            margin-top: 10px;
-            
+            margin: 0;
+            padding: 0;
             background-color: #f8f9fa; /* Fondo gris claro */
         }
 
@@ -153,6 +153,32 @@
             .modal-dialog {
                 max-width: 80%; /* Ajustar el tamaño del modal para pantallas más pequeñas */
                 max-height: 50vh;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .score {
+                font-size: 1.5em; /* Ajustar el tamaño del número del puntaje para pantallas de celulares */
+            }
+
+            .score-button {
+                font-size: 1em; /* Ajustar el tamaño de los botones para pantallas de celulares */
+                padding: 8px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .video-container video {
+                height: 30vh; /* Ajustar la altura del video para pantallas de celulares */
+            }
+
+            .table tr:first-child,
+            .table tr:last-child {
+                height: 20%; /* Ajustar la altura de las filas para pantallas de celulares */
+            }
+
+            .table tr:nth-child(2) {
+                height: 60%; /* Ajustar la altura de la fila central para pantallas de celulares */
             }
         }
     </style>
