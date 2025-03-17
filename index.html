@@ -1,16 +1,163 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grabador de Cámara Web</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .custom-bg {
+            background-color: #f8f9fa !important; /* Fondo gris claro */
+        }
+
+        .score {
+            font-size: 3em; /* Aumentar el tamaño del número del puntaje */
+            margin: 0 10px;
+        }
+
+        .score-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-button {
+            font-size: 1.5em; /* Aumentar el tamaño de los botones */
+            padding: 15px;
+            color: #fff; /* Color de texto blanco */
+            border-radius: 50%; /* Botones redondos */
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c; /* Rojo */
+            border-color: #e74c3c;
+        }
+
+        .btn-success {
+            background-color: #2ecc71; /* Verde */
+            border-color: #2ecc71;
+        }
+
+        .btn-primary {
+            background-color: #3498db; /* Azul */
+            border-color: #3498db;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6; /* Gris */
+            border-color: #95a5a6;
+        }
+
+        .video-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 33vh; /* 33% de la altura de la página */
+        }
+
+        .modal-content {
+            text-align: center;
+        }
+
+        .modal-dialog {
+            max-width: 40%; /* 40% del ancho */
+            max-height: 30vh; /* 30% de la altura */
+        }
+
+        .modal-body video {
+            width: 100%;
+            height: 100%;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: #f8f9fa; /* Fondo gris claro */
+        }
+
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .table {
+            height: 100%;
+            border: 2px solid black; /* Borde negro */
+        }
+
+        .table td {
+            vertical-align: middle;
+            border: 2px solid black; /* Borde negro */
+        }
+
+        .table tr:first-child,
+        .table tr:last-child {
+            height: 25%; /* Cada una de estas filas ocupa el 25% de la altura */
+        }
+
+        .table tr:nth-child(2) {
+            height: 50%; /* Esta fila ocupa el 50% de la altura */
+        }
+
+        h2, h3 {
+            color: #2c3e50; /* Color de texto oscuro */
+        }
+
+        p {
+            color: #7f8c8d; /* Color de texto gris oscuro */
+        }
+
+        .player1-score {
+            color: #e74c3c; /* Rojo */
+        }
+
+        .player2-score {
+            color: #2ecc71; /* Verde */
+        }
+
+        .player3-score {
+            color: #3498db; /* Azul */
+        }
+
+        .player4-score {
+            color: #f1c40f; /* Amarillo */
+        }
+
+        @media (max-width: 768px) {
+            .score {
+                font-size: 2em; /* Ajustar el tamaño del número del puntaje para pantallas más pequeñas */
+            }
+
+            .score-button {
+                font-size: 1.2em; /* Ajustar el tamaño de los botones para pantallas más pequeñas */
+                padding: 10px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .modal-dialog {
+                max-width: 80%; /* Ajustar el tamaño del modal para pantallas más pequeñas */
+                max-height: 50vh;
+            }
+        }
+    </style>
     <script defer>
-        let mediaRecorder; // Controlador de la grabación
-        let recordedChunks = []; // Almacenará las partes del video grabado
-        let stream; // Flujo de video y audio
-        let videoURL; // URL del video grabado
-        
-        // Solicita permisos y obtiene el flujo de la cámara y el micrófono
+        let mediaRecorder;
+        let recordedChunks = [];
+        let stream;
+        let videoURL;
+
         async function getMedia() {
             if (!stream) {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -18,23 +165,21 @@
             return stream;
         }
 
-        // Inicia la grabación de video
         async function startRecording() {
-            recordedChunks = []; // Reinicia el almacenamiento del video
+            recordedChunks = [];
             const stream = await getMedia();
-            document.getElementById('video').srcObject = stream; // Muestra la vista previa en el video principal
-            
+            document.getElementById('video').srcObject = stream;
+
             mediaRecorder = new MediaRecorder(stream);
-            mediaRecorder.ondataavailable = event => recordedChunks.push(event.data); // Guarda los fragmentos de video
+            mediaRecorder.ondataavailable = event => recordedChunks.push(event.data);
             mediaRecorder.start();
         }
-        
-        // Detiene la grabación y libera el stream de la cámara
+
         function stopRecording() {
             return new Promise(resolve => {
                 if (mediaRecorder && mediaRecorder.state !== "inactive") {
                     mediaRecorder.onstop = () => {
-                        document.getElementById('video').srcObject = null; // Limpia la vista previa
+                        document.getElementById('video').srcObject = null;
                         resolve();
                     };
                     mediaRecorder.stop();
@@ -43,55 +188,145 @@
                 }
             });
         }
-        
-        // Abre el modal y muestra la grabación
+
         async function openModal() {
-            await stopRecording(); // Asegura que la grabación se detenga antes de mostrarla
-            
+            await stopRecording();
+
             if (recordedChunks.length === 0) return;
-            
+
             const blob = new Blob(recordedChunks, { type: 'video/webm' });
             videoURL = URL.createObjectURL(blob);
             document.getElementById('modal-video').src = videoURL;
             document.getElementById('download-button').href = videoURL;
-            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').style.display = 'block';
         }
-        
-        // Cierra el modal y reanuda la grabación automáticamente
+
         async function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').style.display = 'none';
             document.getElementById('modal-video').src = "";
-            await startRecording(); // Reinicia la grabación al cerrar el modal
+            await startRecording();
         }
-        
-        // Rebobina 5 segundos en el video dentro del modal
+
         function rewindModalVideo() {
             const videoElement = document.getElementById('modal-video');
             videoElement.currentTime = Math.max(0, videoElement.currentTime - 5);
         }
+
+        function increaseScore(playerId) {
+            const scoreElement = document.getElementById(playerId + '-score');
+            let score = parseInt(scoreElement.textContent);
+            scoreElement.textContent = ++score;
+        }
+
+        function decreaseScore(playerId) {
+            const scoreElement = document.getElementById(playerId + '-score');
+            let score = parseInt(scoreElement.textContent);
+            if (score > 0) {
+                scoreElement.textContent = --score;
+            }
+        }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="p-6 bg-gray-100">
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
-        <h1 class="text-2xl font-bold mb-4">Grabador de Cámara Web</h1>
-        <video id="video" autoplay class="w-full mb-4"></video>
-        <div class="flex space-x-4 mb-4">
-            <button onclick="startRecording()" class="bg-blue-500 text-white px-4 py-2 rounded">Iniciar Grabación</button>
-            <button onclick="openModal()" class="bg-gray-500 text-white px-4 py-2 rounded">📂 Ver Grabación</button>
-            <button onclick="stopRecording()" class="bg-red-500 text-white px-4 py-2 rounded">Detener Grabación</button>
-        </div>
+
+<body class="custom-bg">
+
+    <div class="container-fluid">
+
+        <table class="table table-bordered w-100">
+            <tr>
+                <td class="text-center">
+                    <h3>Jugador 1</h3>
+                    <div class="score-container">
+                        <button class="btn btn-danger score-button" onclick="decreaseScore('player1')">-</button>
+                        <span id="player1-score" class="score player1-score">0</span>
+                        <button class="btn btn-success score-button" onclick="increaseScore('player1')">+</button>
+                    </div>
+                </td>
+                <td style="width: 50%;">
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <h2>Terkko's Billiard's Club</h2>
+                            <p>Software de gestion de tiempo, puntos y grabacion</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <h3>Jugador 2</h3>
+                    <div class="score-container">
+                        <button class="btn btn-danger score-button" onclick="decreaseScore('player2')">-</button>
+                        <span id="player2-score" class="score player2-score">0</span>
+                        <button class="btn btn-success score-button" onclick="increaseScore('player2')">+</button>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td class="text-center">
+                    <div class="video-container">
+                        <h2>Grabacion de Video</h2>
+                        <video id="video" autoplay></video>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="startRecording()">Iniciar Grabación</button>
+                            <button class="btn btn-secondary" onclick="openModal()">📂 Ver Grabación</button>
+                            <button class="btn btn-danger" onclick="stopRecording()">Detener Grabación</button>
+                        </div>
+                    </div>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text-center">
+                    <h3>Jugador 3</h3>
+                    <div class="score-container">
+                        <button class="btn btn-danger score-button" onclick="decreaseScore('player3')">-</button>
+                        <span id="player3-score" class="score player3-score">0</span>
+                        <button class="btn btn-success score-button" onclick="increaseScore('player3')">+</button>
+                    </div>
+                </td>
+                <td style="width: 30%;">
+                    <div class="row">
+                        <div class="col-12 text-center">
+                            <p>Desarrollado por Karol Diaz - Terkko's Billiard's Club | Todos los derechos Reservados 2025.</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <h3>Jugador 4</h3>
+                    <div class="score-container">
+                        <button class="btn btn-danger score-button" onclick="decreaseScore('player4')">-</button>
+                        <span id="player4-score" class="score player4-score">0</span>
+                        <button class="btn btn-success score-button" onclick="increaseScore('player4')">+</button>
+                    </div>
+                </td>
+            </tr>
+
+        </table>
     </div>
-    
-    <div id="modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center">
-        <div class="bg-white p-6 rounded-lg shadow-lg max-w-lg">
-            <video id="modal-video" controls class="w-full mb-4"></video>
-            <div class="flex justify-between">
-                <button onclick="rewindModalVideo()" class="bg-gray-500 text-white px-4 py-2 rounded">⏪ Retroceder 5s</button>
-                <a id="download-button" download="grabacion.webm" class="bg-green-500 text-white px-4 py-2 rounded">⬇ Descargar</a>
-                <button onclick="closeModal()" class="bg-red-500 text-white px-4 py-2 rounded">Cerrar</button>
+
+    <div id="modal" class="modal" tabindex="-1" role="dialog" style="display: none;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Grabación</h5>
+                    <button type="button" class="close" onclick="closeModal()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <video id="modal-video" controls></video>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="rewindModalVideo()">⏪ Retroceder 5s</button>
+                    <a id="download-button" class="btn btn-primary" download="grabacion.webm">⬇ Descargar</a>
+                    <button class="btn btn-danger" onclick="closeModal()">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>
